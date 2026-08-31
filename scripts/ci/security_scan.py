@@ -41,6 +41,36 @@ SECRET_PATTERNS = [
     ),
 ]
 
+CONFIG_DIRECTORIES = {
+    ROOT / "configs",
+}
+
+CONFIG_FILE_SUFFIXES = {
+    ".yaml",
+    ".yml",
+    ".json",
+    ".toml",
+}
+
+CONFIG_SECRET_PATTERNS = [
+    (
+        re.compile(
+            r"(?i)^\s*(api[_-]?key|secret[_-]?key|access[_-]?token|auth[_-]?token)"
+            r"\s*[:=]\s*(?!['\"]?\$\{[^}]+\}['\"]?(?:\s+#.*)?$)"
+            r"['\"]?[^#\r\n]+['\"]?\s*(?:#.*)?$"
+        ),
+        "possible hard-coded configuration credential",
+    ),
+    (
+        re.compile(
+            r"(?i)^\s*(password|passwd|pwd)"
+            r"\s*[:=]\s*(?!['\"]?\$\{[^}]+\}['\"]?(?:\s+#.*)?$)"
+            r"['\"]?[^#\r\n]+['\"]?\s*(?:#.*)?$"
+        ),
+        "possible hard-coded configuration password",
+    ),
+]
+
 
 def iter_files() -> list[Path]:
     """Return repository files that are in scanner scope."""
@@ -74,8 +104,24 @@ def scan_file(path: Path) -> list[str]:
 
     relative = path.relative_to(ROOT)
 
+    is_config_file = path.suffix.lower() in CONFIG_FILE_SUFFIXES and any(
+        config_directory == path.parent or config_directory in path.parents
+        for config_directory in CONFIG_DIRECTORIES
+    )
+
+    patterns = SECRET_PATTERNS
+
+    if is_config_file:
+        patterns = SECRET_PATTERNS + CONFIG_SECRET_PATTERNS
+
     for line_number, line in enumerate(text.splitlines(), start=1):
-        for pattern, description in SECRET_PATTERNS:
+        if is_config_file and re.search(
+            r"\$\{[A-Za-z_][A-Za-z0-9_]*\}",
+            line,
+        ):
+            continue
+
+        for pattern, description in patterns:
             if pattern.search(line):
                 findings.append(f"{relative}:{line_number}: {description}")
 
@@ -97,8 +143,10 @@ def main() -> int:
             print(f"- {finding}")
         return 1
 
+    files = iter_files()
+
     print("SECURITY SCAN: PASS")
-    print(f"Scanned {len(iter_files())} files.")
+    print(f"Scanned {len(files)} files.")
     print("No configured secret patterns were detected.")
     return 0
 
