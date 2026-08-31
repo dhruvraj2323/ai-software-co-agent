@@ -31,4 +31,5 @@ jobs:
         run: uv run python --version
 
       - name: Verify package import
-        run: uv run python -c "import coagent; print('coagent import: PASS')"
+        run: |
+          uv run python -c "import coagent; print('coagent import: PASS')"
