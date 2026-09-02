@@ -1,0 +1,3 @@
+# P0 structural configuration scaffold.
+# Do not place credentials, API keys, or policy rules in this file.
+{}

@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AI Software Co-Agent tools configuration scaffold",
+  "description": "P0 structural scaffold only; tool and authorization contracts are introduced in later phases.",
+  "type": "object",
+  "additionalProperties": true
+}

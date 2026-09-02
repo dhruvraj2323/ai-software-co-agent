@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AI Software Co-Agent policy configuration scaffold",
+  "description": "P0 structural scaffold only; it defines no authorization semantics or security policy.",
+  "type": "object",
+  "additionalProperties": true
+}
