@@ -37,5 +37,14 @@ jobs:
       - name: Run tests
         run: uv run pytest -q
 
+      - name: Run Ruff lint
+        run: uv run ruff check .
+
+      - name: Run Ruff format check
+        run: uv run ruff format --check .
+
+      - name: Run Mypy
+        run: uv run mypy src cli scripts
+
       - name: Run security scan
         run: uv run python scripts/ci/security_scan.py
