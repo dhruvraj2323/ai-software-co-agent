@@ -41,4 +41,6 @@ Thumbs.db
 
 # Project artifacts
 artifacts/test-results/*
+!artifacts/test-results/.gitkeep
 artifacts/audit/*
+!artifacts/audit/.gitkeep

@@ -1,0 +1,11 @@
+name: Security Scaffold
+
+on:
+  workflow_dispatch:
+
+jobs:
+  scaffold:
+    name: Structural placeholder
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'true'
