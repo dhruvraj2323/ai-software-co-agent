@@ -12,7 +12,9 @@ license = { file = "LICENSE" }
 authors = [
     { name = "AI Software Co-Agent Team" }
 ]
-dependencies = []
+dependencies = [
+    "pydantic>=2,<3",
+]
 
 [project.optional-dependencies]
 dev = [
