@@ -1,4 +1,10 @@
-﻿"""Security boundary primitives."""
+"""Security boundary primitives."""
+
+from coagent.security.limits import (
+    ResourceLimiter,
+    ResourceLimitExceededError,
+    ResourceLimits,
+)
 from coagent.security.path import (
     WorkspaceEscapeError,
     is_path_within_workspace,
@@ -16,6 +22,9 @@ __all__ = [
     "PathPolicyOutcome",
     "ProtectedPathCategory",
     "ProtectedPathPolicy",
+    "ResourceLimitExceededError",
+    "ResourceLimiter",
+    "ResourceLimits",
     "WorkspaceEscapeError",
     "evaluate_path_policy",
     "is_path_within_workspace",
