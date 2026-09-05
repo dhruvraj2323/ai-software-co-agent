@@ -4,9 +4,21 @@ from coagent.security.path import (
     is_path_within_workspace,
     require_path_within_workspace,
 )
+from coagent.security.policy import (
+    PathPolicyOutcome,
+    ProtectedPathCategory,
+    ProtectedPathPolicy,
+    evaluate_path_policy,
+    is_protected_path,
+)
 
 __all__ = [
+    "PathPolicyOutcome",
+    "ProtectedPathCategory",
+    "ProtectedPathPolicy",
     "WorkspaceEscapeError",
+    "evaluate_path_policy",
     "is_path_within_workspace",
+    "is_protected_path",
     "require_path_within_workspace",
 ]
