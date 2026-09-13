@@ -1,4 +1,4 @@
-"""Tool contracts and registry package."""
+"""Tool contracts, registry, and gateway package."""
 
 from .contracts import (
     AutonomyMode,
@@ -9,6 +9,7 @@ from .contracts import (
     ToolResult,
     ToolResultStatus,
 )
+from .gateway import ToolExecutor, ToolGateway
 from .registry import (
     ToolCapability,
     ToolDefinition,
@@ -25,6 +26,8 @@ __all__ = [
     "ScopeEffect",
     "ToolCapability",
     "ToolDefinition",
+    "ToolExecutor",
+    "ToolGateway",
     "ToolOrigin",
     "ToolRegistry",
     "ToolRequest",
