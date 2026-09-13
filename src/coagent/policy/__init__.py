@@ -1,4 +1,4 @@
-"""Policy request, decision, and approval contracts."""
+"""Policy request, decision, approval, and evaluation contracts."""
 
 from .approval import (
     ApprovalDecision,
@@ -12,6 +12,7 @@ from .contracts import (
     PolicyDecisionOutcome,
     PolicyRequest,
 )
+from .evaluator import PolicyEvaluator
 
 __all__ = [
     "ApprovalDecision",
@@ -21,5 +22,6 @@ __all__ = [
     "ApprovalStore",
     "PolicyDecision",
     "PolicyDecisionOutcome",
+    "PolicyEvaluator",
     "PolicyRequest",
 ]
