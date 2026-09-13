@@ -1,4 +1,4 @@
-﻿"""Security boundary primitives."""
+"""Security boundary primitives."""
 from coagent.security.limits import (
     ResourceLimiter,
     ResourceLimitExceededError,
@@ -16,6 +16,15 @@ from coagent.security.policy import (
     evaluate_path_policy,
     is_protected_path,
 )
+from coagent.security.sandbox import (
+    Sandbox,
+    SandboxGuarantee,
+    SandboxGuarantees,
+    SandboxRequirements,
+    SandboxUnavailableError,
+    require_sandbox_guarantees,
+    validate_sandbox_guarantees,
+)
 from coagent.security.secrets import (
     REDACTION_MARKER,
     SecretPattern,
@@ -32,6 +41,11 @@ __all__ = [
     "ResourceLimitExceededError",
     "ResourceLimiter",
     "ResourceLimits",
+    "Sandbox",
+    "SandboxGuarantee",
+    "SandboxGuarantees",
+    "SandboxRequirements",
+    "SandboxUnavailableError",
     "SecretPattern",
     "SecretRedactor",
     "WorkspaceEscapeError",
@@ -41,4 +55,6 @@ __all__ = [
     "is_protected_path",
     "redact_secrets",
     "require_path_within_workspace",
+    "require_sandbox_guarantees",
+    "validate_sandbox_guarantees",
 ]
