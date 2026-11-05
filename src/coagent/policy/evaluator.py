@@ -14,6 +14,7 @@ from coagent.security import (
     ProtectedPathPolicy,
     WorkspaceEscapeError,
 )
+from coagent.tools.contracts import AutonomyMode
 from coagent.tools.registry import (
     ToolDefinition,
     ToolRiskLevel,
@@ -192,6 +193,26 @@ class PolicyEvaluator:
                 PolicyDecisionOutcome.ASK,
                 "External side effects require explicit authorization.",
                 "policy.risk.external",
+                created_at,
+            )
+        if (
+            request.autonomy_mode is AutonomyMode.CHAT or request.autonomy_mode.value == "CHAT"
+        ) and (ToolSideEffect.WRITE in side_effects or ToolSideEffect.EXECUTE in side_effects):
+            return PolicyEvaluator._decision(
+                request,
+                PolicyDecisionOutcome.DENY,
+                "Chat autonomy mode does not authorize write or execute operations.",
+                "policy.autonomy.chat",
+                created_at,
+            )
+        if (
+            request.autonomy_mode is AutonomyMode.PLAN or request.autonomy_mode.value == "PLAN"
+        ) and (ToolSideEffect.WRITE in side_effects or ToolSideEffect.EXECUTE in side_effects):
+            return PolicyEvaluator._decision(
+                request,
+                PolicyDecisionOutcome.DENY,
+                "Plan autonomy mode does not authorize write or execute operations.",
+                "policy.autonomy.plan",
                 created_at,
             )
         if (

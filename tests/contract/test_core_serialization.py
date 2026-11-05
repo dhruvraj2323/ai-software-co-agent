@@ -121,10 +121,7 @@ def test_generated_ids_are_uuid_instances(generator) -> None:
 
 
 def test_generated_ids_are_unique_across_repeated_generation() -> None:
-    generated = {
-        generate_session_id()
-        for _ in range(25)
-    }
+    generated = {generate_session_id() for _ in range(25)}
 
     assert len(generated) == 25
 
@@ -160,9 +157,7 @@ def test_recoverability_wire_values_are_stable() -> None:
 def test_error_record_json_roundtrip_preserves_all_fields() -> None:
     error = make_error(task_id=uuid4())
 
-    restored = ErrorRecord.model_validate_json(
-        error.model_dump_json()
-    )
+    restored = ErrorRecord.model_validate_json(error.model_dump_json())
 
     assert restored == error
     assert restored.error_id == error.error_id
@@ -180,9 +175,7 @@ def test_error_record_json_roundtrip_preserves_all_fields() -> None:
 def test_error_record_json_roundtrip_preserves_null_task_id() -> None:
     error = make_error(task_id=None)
 
-    restored = ErrorRecord.model_validate_json(
-        error.model_dump_json()
-    )
+    restored = ErrorRecord.model_validate_json(error.model_dump_json())
 
     assert restored == error
     assert restored.task_id is None
@@ -192,13 +185,9 @@ def test_error_record_json_roundtrip_preserves_null_task_id() -> None:
 def test_error_record_roundtrip_preserves_severity(
     severity: EventSeverity,
 ) -> None:
-    error = make_error().model_copy(
-        update={"severity": severity}
-    )
+    error = make_error().model_copy(update={"severity": severity})
 
-    restored = ErrorRecord.model_validate_json(
-        error.model_dump_json()
-    )
+    restored = ErrorRecord.model_validate_json(error.model_dump_json())
 
     assert restored.severity is severity
 
@@ -207,13 +196,9 @@ def test_error_record_roundtrip_preserves_severity(
 def test_error_record_roundtrip_preserves_recoverability(
     recoverability: Recoverability,
 ) -> None:
-    error = make_error().model_copy(
-        update={"recoverability": recoverability}
-    )
+    error = make_error().model_copy(update={"recoverability": recoverability})
 
-    restored = ErrorRecord.model_validate_json(
-        error.model_dump_json()
-    )
+    restored = ErrorRecord.model_validate_json(error.model_dump_json())
 
     assert restored.recoverability is recoverability
 
@@ -255,9 +240,7 @@ def test_event_envelope_json_roundtrip_preserves_all_fields() -> None:
         },
     )
 
-    restored = EventEnvelope.model_validate_json(
-        event.model_dump_json()
-    )
+    restored = EventEnvelope.model_validate_json(event.model_dump_json())
 
     assert restored == event
     assert restored.event_id == event.event_id
@@ -300,9 +283,7 @@ def test_success_result_json_roundtrip_preserves_result() -> None:
         result="success-value",
     )
 
-    restored = Result[str].model_validate_json(
-        result.model_dump_json()
-    )
+    restored = Result[str].model_validate_json(result.model_dump_json())
 
     assert restored == result
     assert restored.request_id == request_id
@@ -321,9 +302,7 @@ def test_failure_result_json_roundtrip_preserves_error() -> None:
         error=error,
     )
 
-    restored = Result[str].model_validate_json(
-        result.model_dump_json()
-    )
+    restored = Result[str].model_validate_json(result.model_dump_json())
 
     assert restored == result
     assert restored.request_id == request_id
@@ -334,9 +313,7 @@ def test_failure_result_json_roundtrip_preserves_error() -> None:
 
 def test_result_rejects_invalid_json() -> None:
     with pytest.raises(ValidationError):
-        Result[str].model_validate_json(
-            '{"request_id":"not-a-uuid","success":true,"result":"ok"}'
-        )
+        Result[str].model_validate_json('{"request_id":"not-a-uuid","success":true,"result":"ok"}')
 
 
 def test_result_rejects_wrong_top_level_json_shape() -> None:
@@ -401,9 +378,7 @@ def test_client_request_all_types_json_roundtrip(
 ) -> None:
     request = make_client_request(request_type)
 
-    restored = ClientRequest.model_validate_json(
-        request.model_dump_json()
-    )
+    restored = ClientRequest.model_validate_json(request.model_dump_json())
 
     assert restored == request
     assert restored.protocol_version == PROTOCOL_VERSION
@@ -428,9 +403,7 @@ def test_client_request_empty_payload_and_context_roundtrip() -> None:
         created_at=datetime.now(UTC),
     )
 
-    restored = ClientRequest.model_validate_json(
-        request.model_dump_json()
-    )
+    restored = ClientRequest.model_validate_json(request.model_dump_json())
 
     assert restored == request
     assert restored.payload == {}
@@ -449,9 +422,7 @@ def test_runtime_event_all_types_json_roundtrip(
 ) -> None:
     event = make_runtime_event(event_type)
 
-    restored = RuntimeEvent.model_validate_json(
-        event.model_dump_json()
-    )
+    restored = RuntimeEvent.model_validate_json(event.model_dump_json())
 
     assert restored == event
     assert restored.protocol_version == PROTOCOL_VERSION
@@ -478,9 +449,7 @@ def test_runtime_event_nullable_correlation_ids_roundtrip() -> None:
         created_at=datetime.now(UTC),
     )
 
-    restored = RuntimeEvent.model_validate_json(
-        event.model_dump_json()
-    )
+    restored = RuntimeEvent.model_validate_json(event.model_dump_json())
 
     assert restored == event
     assert restored.request_id is None
@@ -498,17 +467,13 @@ def test_protocol_error_json_roundtrip_preserves_code(
 ) -> None:
     canonical_messages = {
         ProtocolErrorCode.MALFORMED_MESSAGE: "Malformed protocol message.",
-        ProtocolErrorCode.UNSUPPORTED_PROTOCOL_VERSION: (
-            "Unsupported protocol version."
-        ),
+        ProtocolErrorCode.UNSUPPORTED_PROTOCOL_VERSION: ("Unsupported protocol version."),
         ProtocolErrorCode.INVALID_REQUEST: "Invalid request.",
         ProtocolErrorCode.UNKNOWN_REQUEST_TYPE: "Unknown request type.",
         ProtocolErrorCode.MISSING_REQUIRED_FIELD: "Missing required field.",
         ProtocolErrorCode.INVALID_FIELD: "Invalid field.",
         ProtocolErrorCode.INVALID_FIELD_TYPE: "Invalid field type.",
-        ProtocolErrorCode.INVALID_CORRELATION_ID: (
-            "Invalid correlation ID."
-        ),
+        ProtocolErrorCode.INVALID_CORRELATION_ID: ("Invalid correlation ID."),
         ProtocolErrorCode.PAYLOAD_INVALID: "Invalid payload.",
     }
 
@@ -522,9 +487,7 @@ def test_protocol_error_json_roundtrip_preserves_code(
         },
     )
 
-    restored = ProtocolError.model_validate_json(
-        error.model_dump_json()
-    )
+    restored = ProtocolError.model_validate_json(error.model_dump_json())
 
     assert restored == error
     assert restored.code is code
@@ -551,9 +514,7 @@ def test_protocol_error_envelope_json_roundtrip_preserves_nested_contract() -> N
         created_at=datetime.now(UTC),
     )
 
-    restored = ProtocolErrorEnvelope.model_validate_json(
-        envelope.model_dump_json()
-    )
+    restored = ProtocolErrorEnvelope.model_validate_json(envelope.model_dump_json())
 
     assert restored == envelope
     assert restored.protocol_version == PROTOCOL_VERSION
@@ -708,9 +669,7 @@ def test_serialization_preserves_uuid_and_datetime_types() -> None:
         created_at=created_at,
     )
 
-    restored = ClientRequest.model_validate_json(
-        request.model_dump_json()
-    )
+    restored = ClientRequest.model_validate_json(request.model_dump_json())
 
     assert isinstance(restored.request_id, UUID)
     assert isinstance(restored.session_id, UUID)

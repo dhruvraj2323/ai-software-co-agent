@@ -7,6 +7,7 @@ from typing import Any
 from uuid import UUID
 
 from coagent.core.ids import generate_event_id, generate_task_id
+from coagent.core.types import EventSeverity
 from coagent.protocol.errors import (
     ProtocolError,
     ProtocolErrorCode,
@@ -197,7 +198,7 @@ class RuntimeService:
             task_id=task_id if task_id is not None else request.task_id,
             type=event_type,
             payload=payload,
-            severity="INFO",
+            severity=EventSeverity.INFO,
             created_at=datetime.now(UTC),
         )
 
