@@ -136,7 +136,7 @@ def test_secret_filtering_in_memory_and_context() -> None:
     manager = ScopedMemoryManager()
     task_id = uuid4()
 
-    dummy_token = "".join(["ghp_", "ABCDEF1234567890abcdefghijklmnopqrstuv"])
+    dummy_token = "ghp_" + "ABCDEF1234567890abcdefghijklmnopqrstuv"
     raw_memory = f"Token is {dummy_token}"
 
     rec = manager.record_task_memory(task_id=task_id, key="github_token", value=raw_memory)
