@@ -9,7 +9,7 @@ from .contracts import (
     ToolResult,
     ToolResultStatus,
 )
-from .gateway import ToolExecutor, ToolGateway
+from .gateway import ToolDecisionAuditHook, ToolExecutor, ToolGateway
 from .registry import (
     ToolCapability,
     ToolDefinition,
@@ -25,6 +25,7 @@ __all__ = [
     "Scope",
     "ScopeEffect",
     "ToolCapability",
+    "ToolDecisionAuditHook",
     "ToolDefinition",
     "ToolExecutor",
     "ToolGateway",
