@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 import re
+from pathlib import Path
 
 from docx import Document
-
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCS_DIR = ROOT / "docs"
@@ -105,16 +104,10 @@ def convert_document(source: Path, destination: Path) -> None:
 
 def main() -> None:
     """Convert every locked DOCX under docs/ to a Markdown mirror."""
-    documents = sorted(
-        path
-        for path in DOCS_DIR.rglob("*.docx")
-        if "FINAL_LOCKED" in path.name
-    )
+    documents = sorted(path for path in DOCS_DIR.rglob("*.docx") if "FINAL_LOCKED" in path.name)
 
     if len(documents) != 19:
-        raise RuntimeError(
-            f"Expected 19 FINAL_LOCKED DOCX files, found {len(documents)}."
-        )
+        raise RuntimeError(f"Expected 19 FINAL_LOCKED DOCX files, found {len(documents)}.")
 
     for source in documents:
         destination = source.with_suffix(".md")

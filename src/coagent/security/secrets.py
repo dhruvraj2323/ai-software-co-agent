@@ -1,4 +1,5 @@
-﻿"""Secret detection and redaction primitives."""
+"""Secret detection and redaction primitives."""
+
 from __future__ import annotations
 
 import re
@@ -6,22 +7,27 @@ from dataclasses import dataclass
 from typing import Any
 
 REDACTION_MARKER = "[REDACTED]"
+
+
 @dataclass(frozen=True)
 class SecretPattern:
     """Configured secret-detection pattern."""
+
     name: str
     pattern: str
     replacement: str = REDACTION_MARKER
+
     def compile(self) -> re.Pattern[str]:
         """Compile the configured secret pattern."""
         try:
             return re.compile(self.pattern, re.DOTALL)
         except re.error as exc:
-            raise ValueError(
-                f"invalid secret pattern '{self.name}': {exc}"
-            ) from exc
+            raise ValueError(f"invalid secret pattern '{self.name}': {exc}") from exc
+
+
 class SecretRedactor:
     """Deterministically detect and redact sensitive values."""
+
     _BUILTIN_PATTERNS = (
         SecretPattern(
             name="private_key",
@@ -50,9 +56,7 @@ class SecretRedactor:
         ),
         SecretPattern(
             name="token_assignment",
-            pattern=(
-                r"(?i)(\btoken\s*[:=]\s*['\"]?)[^'\"\s,;]+"
-            ),
+            pattern=(r"(?i)(\btoken\s*[:=]\s*['\"]?)[^'\"\s,;]+"),
             replacement=r"\1" + REDACTION_MARKER,
         ),
         SecretPattern(
@@ -65,9 +69,7 @@ class SecretRedactor:
         ),
         SecretPattern(
             name="password_assignment",
-            pattern=(
-                r"(?i)(\b(?:password|passwd|pwd)\s*[:=]\s*['\"]?)[^'\"\s,;]+"
-            ),
+            pattern=(r"(?i)(\b(?:password|passwd|pwd)\s*[:=]\s*['\"]?)[^'\"\s,;]+"),
             replacement=r"\1" + REDACTION_MARKER,
         ),
         SecretPattern(
@@ -76,24 +78,22 @@ class SecretRedactor:
             replacement=r"\1" + REDACTION_MARKER,
         ),
     )
+
     def __init__(
         self,
         patterns: tuple[SecretPattern, ...] = (),
     ) -> None:
         """Create a redactor with built-in and configured patterns."""
         self._patterns = tuple(
-            (pattern, pattern.compile())
-            for pattern in (*self._BUILTIN_PATTERNS, *patterns)
+            (pattern, pattern.compile()) for pattern in (*self._BUILTIN_PATTERNS, *patterns)
         )
+
     def redact(self, value: Any) -> Any:
         """Return a redacted copy of a value."""
         if isinstance(value, str):
             return self._redact_string(value)
         if isinstance(value, dict):
-            return {
-                key: self.redact(item)
-                for key, item in value.items()
-            }
+            return {key: self.redact(item) for key, item in value.items()}
         if isinstance(value, list):
             return [self.redact(item) for item in value]
         if isinstance(value, tuple):
@@ -101,13 +101,11 @@ class SecretRedactor:
         if isinstance(value, set):
             return {self.redact(item) for item in value}
         return value
+
     def contains_secret(self, value: Any) -> bool:
         """Return whether a value contains a recognized secret pattern."""
         if isinstance(value, str):
-            return any(
-                compiled.search(value) is not None
-                for _, compiled in self._patterns
-            )
+            return any(compiled.search(value) is not None for _, compiled in self._patterns)
         if isinstance(value, dict):
             return any(
                 self.contains_secret(key) or self.contains_secret(item)
@@ -116,12 +114,15 @@ class SecretRedactor:
         if isinstance(value, (list, tuple, set)):
             return any(self.contains_secret(item) for item in value)
         return False
+
     def _redact_string(self, value: str) -> str:
         """Redact all configured secret matches from a string."""
         redacted = value
         for pattern, compiled in self._patterns:
             redacted = compiled.sub(pattern.replacement, redacted)
         return redacted
+
+
 def redact_secrets(
     value: Any,
     *,
@@ -129,6 +130,8 @@ def redact_secrets(
 ) -> Any:
     """Redact recognized secrets from a value."""
     return SecretRedactor(patterns).redact(value)
+
+
 def contains_secret(
     value: Any,
     *,

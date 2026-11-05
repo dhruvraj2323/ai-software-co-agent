@@ -1,4 +1,5 @@
-﻿"""Unit tests for workspace traversal and symlink escape protection."""
+"""Unit tests for workspace traversal and symlink escape protection."""
+
 from __future__ import annotations
 
 import subprocess
@@ -22,17 +23,23 @@ def make_scope(root: Path) -> WorkspaceScope:
         workspace_id=uuid4(),
         root=str(root),
     )
+
+
 def test_parent_traversal_outside_workspace_is_blocked(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     workspace_root.mkdir()
     scope = make_scope(workspace_root)
     assert not is_path_within_workspace(scope, "../outside")
+
+
 def test_parent_traversal_outside_workspace_raises(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     workspace_root.mkdir()
     scope = make_scope(workspace_root)
     with pytest.raises(WorkspaceEscapeError):
         require_path_within_workspace(scope, "../outside")
+
+
 def test_absolute_path_outside_workspace_is_blocked(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     workspace_root.mkdir()
@@ -40,18 +47,24 @@ def test_absolute_path_outside_workspace_is_blocked(tmp_path: Path) -> None:
     outside_path.mkdir()
     scope = make_scope(workspace_root)
     assert not is_path_within_workspace(scope, str(outside_path))
+
+
 def test_nested_path_inside_workspace_is_allowed(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     nested = workspace_root / "src" / "coagent"
     nested.mkdir(parents=True)
     scope = make_scope(workspace_root)
     assert is_path_within_workspace(scope, "src/coagent")
+
+
 def test_absolute_path_inside_workspace_is_allowed(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     nested = workspace_root / "src"
     nested.mkdir(parents=True)
     scope = make_scope(workspace_root)
     assert is_path_within_workspace(scope, str(nested))
+
+
 def test_symlink_to_outside_workspace_is_blocked(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     workspace_root.mkdir()
@@ -66,6 +79,8 @@ def test_symlink_to_outside_workspace_is_blocked(tmp_path: Path) -> None:
         pytest.skip(f"Symlink creation is unavailable: {exc}")
     scope = make_scope(workspace_root)
     assert not is_path_within_workspace(scope, "linked-secret")
+
+
 def test_symlink_to_outside_workspace_raises(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     workspace_root.mkdir()
@@ -81,6 +96,8 @@ def test_symlink_to_outside_workspace_raises(tmp_path: Path) -> None:
     scope = make_scope(workspace_root)
     with pytest.raises(WorkspaceEscapeError):
         require_path_within_workspace(scope, "linked-secret")
+
+
 def test_symlink_to_inside_workspace_is_allowed(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     workspace_root.mkdir()
@@ -93,11 +110,15 @@ def test_symlink_to_inside_workspace_is_allowed(tmp_path: Path) -> None:
         pytest.skip(f"Symlink creation is unavailable: {exc}")
     scope = make_scope(workspace_root)
     assert is_path_within_workspace(scope, "source-link")
+
+
 def test_workspace_root_itself_is_allowed(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     workspace_root.mkdir()
     scope = make_scope(workspace_root)
     assert require_path_within_workspace(scope, ".") == workspace_root.resolve()
+
+
 def test_directory_junction_to_outside_workspace_is_blocked(
     tmp_path: Path,
 ) -> None:
@@ -125,9 +146,7 @@ def test_directory_junction_to_outside_workspace_is_blocked(
         check=False,
     )
     if result.returncode != 0:
-        pytest.skip(
-            f"Directory junction creation unavailable: {result.stderr.strip()}"
-        )
+        pytest.skip(f"Directory junction creation unavailable: {result.stderr.strip()}")
     scope = make_scope(workspace_root)
     assert not is_path_within_workspace(
         scope,

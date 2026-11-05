@@ -1,4 +1,5 @@
-﻿"""Unit tests for deterministic workspace path resolution."""
+"""Unit tests for deterministic workspace path resolution."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -18,6 +19,8 @@ def test_resolve_workspace_path_resolves_relative_path_from_scope_root(
     )
     resolved = resolve_workspace_path(scope, "src/coagent/core")
     assert resolved == (tmp_path / "src/coagent/core").resolve()
+
+
 def test_resolve_workspace_path_resolves_absolute_path_deterministically(
     tmp_path: Path,
 ) -> None:
@@ -31,6 +34,8 @@ def test_resolve_workspace_path_resolves_absolute_path_deterministically(
     second = resolve_workspace_path(scope, str(absolute_path))
     assert first == second
     assert first == absolute_path.resolve()
+
+
 def test_resolve_workspace_path_normalizes_dot_segments(
     tmp_path: Path,
 ) -> None:
@@ -41,6 +46,8 @@ def test_resolve_workspace_path_normalizes_dot_segments(
     )
     resolved = resolve_workspace_path(scope, "src/../tests")
     assert resolved == (tmp_path / "tests").resolve()
+
+
 def test_resolve_workspace_path_does_not_use_current_working_directory(
     tmp_path: Path,
     monkeypatch,

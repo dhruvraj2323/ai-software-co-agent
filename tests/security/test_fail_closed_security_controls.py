@@ -1,4 +1,5 @@
-﻿"""Fail-closed security-control tests for T029."""
+"""Fail-closed security-control tests for T029."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -35,6 +36,8 @@ def require_privileged_action_controls(
         requirements,
     )
     action()
+
+
 def test_privileged_action_requires_all_security_controls(
     workspace_scope: WorkspaceScope,
     workspace_root: Path,
@@ -46,10 +49,12 @@ def test_privileged_action_requires_all_security_controls(
     limiter = ResourceLimiter(resource_limits)
     limiter.start_execution()
     action_ran = False
+
     def action() -> None:
         nonlocal action_ran
         action_ran = True
         target.write_text("fixture", encoding="utf-8")
+
     require_privileged_action_controls(
         workspace_scope,
         str(target),
@@ -60,6 +65,8 @@ def test_privileged_action_requires_all_security_controls(
     )
     assert action_ran is True
     assert target.exists() is True
+
+
 def test_privileged_action_blocks_on_workspace_control_failure(
     workspace_scope: WorkspaceScope,
     outside_root: Path,
@@ -71,10 +78,12 @@ def test_privileged_action_blocks_on_workspace_control_failure(
     limiter = ResourceLimiter(resource_limits)
     limiter.start_execution()
     action_ran = False
+
     def action() -> None:
         nonlocal action_ran
         action_ran = True
         target.write_text("must-not-run", encoding="utf-8")
+
     with pytest.raises(ValueError, match="workspace scope"):
         require_privileged_action_controls(
             workspace_scope,
@@ -86,6 +95,8 @@ def test_privileged_action_blocks_on_workspace_control_failure(
         )
     assert action_ran is False
     assert target.exists() is False
+
+
 def test_privileged_action_blocks_on_resource_control_failure(
     workspace_scope: WorkspaceScope,
     workspace_root: Path,
@@ -102,10 +113,12 @@ def test_privileged_action_blocks_on_resource_control_failure(
     limiter.start_execution()
     now[0] = resource_limits.max_execution_seconds + 0.1
     action_ran = False
+
     def action() -> None:
         nonlocal action_ran
         action_ran = True
         target.write_text("must-not-run", encoding="utf-8")
+
     with pytest.raises(ResourceLimitExceededError, match="execution time"):
         require_privileged_action_controls(
             workspace_scope,
@@ -117,6 +130,8 @@ def test_privileged_action_blocks_on_resource_control_failure(
         )
     assert action_ran is False
     assert target.exists() is False
+
+
 def test_privileged_action_blocks_on_sandbox_control_failure(
     workspace_scope: WorkspaceScope,
     workspace_root: Path,
@@ -129,10 +144,12 @@ def test_privileged_action_blocks_on_sandbox_control_failure(
     limiter.start_execution()
     guarantees = SandboxGuarantees(workspace=False)
     action_ran = False
+
     def action() -> None:
         nonlocal action_ran
         action_ran = True
         target.write_text("must-not-run", encoding="utf-8")
+
     with pytest.raises(
         SandboxUnavailableError,
         match="required sandbox guarantees",
@@ -147,6 +164,8 @@ def test_privileged_action_blocks_on_sandbox_control_failure(
         )
     assert action_ran is False
     assert target.exists() is False
+
+
 def test_privileged_action_does_not_continue_after_resource_failure(
     workspace_scope: WorkspaceScope,
     workspace_root: Path,
@@ -163,10 +182,12 @@ def test_privileged_action_does_not_continue_after_resource_failure(
     limiter.start_execution()
     now[0] = resource_limits.max_execution_seconds + 0.1
     action_ran = False
+
     def action() -> None:
         nonlocal action_ran
         action_ran = True
         target.write_text("must-not-run", encoding="utf-8")
+
     with pytest.raises(ResourceLimitExceededError):
         require_privileged_action_controls(
             workspace_scope,

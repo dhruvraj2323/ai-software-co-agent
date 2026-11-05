@@ -1,4 +1,5 @@
 """Security boundary primitives."""
+
 from coagent.security.limits import (
     ResourceLimiter,
     ResourceLimitExceededError,

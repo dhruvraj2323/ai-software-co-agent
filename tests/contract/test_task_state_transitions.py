@@ -14,9 +14,7 @@ from coagent.runtime.task_state import (
 # transition table: these expectations must detect accidental implementation
 # changes rather than mirror them.
 EXPECTED_TRANSITIONS: dict[TaskState, frozenset[TaskState]] = {
-    TaskState.CREATED: frozenset(
-        {TaskState.PLANNING, TaskState.CANCELLED}
-    ),
+    TaskState.CREATED: frozenset({TaskState.PLANNING, TaskState.CANCELLED}),
     TaskState.PLANNING: frozenset(
         {
             TaskState.READY,
@@ -119,12 +117,7 @@ def test_validating_to_recovering_requires_recovery_availability() -> None:
     """Recovery is explicitly gated for VALIDATING -> RECOVERING."""
     machine = TaskStateMachine(TaskState.VALIDATING)
 
-    assert (
-        machine.can_transition(
-            TaskState.RECOVERING
-        )
-        is False
-    )
+    assert machine.can_transition(TaskState.RECOVERING) is False
 
     machine.transition(
         TaskState.RECOVERING,

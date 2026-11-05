@@ -1,4 +1,5 @@
 """Protected workspace path policy."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -12,12 +13,16 @@ from coagent.workspace import WorkspaceScope
 
 class PathPolicyOutcome(StrEnum):
     """Default security outcome for a protected workspace target."""
+
     ALLOW = "ALLOW"
     DENY = "DENY"
     ASK = "ASK"
     RESTRICT = "RESTRICT"
+
+
 class ProtectedPathCategory(StrEnum):
     """Built-in protected-resource categories."""
+
     VCS = "VCS"
     SECRETS = "SECRETS"
     SECURITY = "SECURITY"
@@ -25,11 +30,14 @@ class ProtectedPathCategory(StrEnum):
     SANDBOX = "SANDBOX"
     AUDIT = "AUDIT"
     CONFIGURATION = "CONFIGURATION"
+
+
 class ProtectedPathPolicy:
     """Classify workspace paths against built-in and configured protections.
     T024 provides protected-resource policy primitives. Higher-level tool,
     risk, approval, and policy-engine evaluation remain outside this class.
     """
+
     _BUILTIN_RULES: tuple[tuple[ProtectedPathCategory, tuple[str, ...]], ...] = (
         (
             ProtectedPathCategory.VCS,
@@ -88,13 +96,13 @@ class ProtectedPathPolicy:
             ),
         ),
     )
+
     def __init__(self, additional_protected_paths: tuple[str, ...] = ()) -> None:
         """Create a policy with optional additional protected paths."""
         self._additional_protected_paths = tuple(
-            Path(path).as_posix().strip("/")
-            for path in additional_protected_paths
-            if path
+            Path(path).as_posix().strip("/") for path in additional_protected_paths if path
         )
+
     def classify(
         self,
         scope: WorkspaceScope,
@@ -119,6 +127,7 @@ class ProtectedPathPolicy:
         ):
             return ProtectedPathCategory.CONFIGURATION
         return None
+
     def outcome(
         self,
         scope: WorkspaceScope,
@@ -133,6 +142,7 @@ class ProtectedPathPolicy:
         if category is not None:
             return PathPolicyOutcome.DENY
         return PathPolicyOutcome.ALLOW
+
     @staticmethod
     def _matches(
         relative_posix: str,
@@ -148,12 +158,11 @@ class ProtectedPathPolicy:
                 return True
             if relative_posix.startswith(f"{normalized}/"):
                 return True
-            if any(
-                Path(part).match(normalized)
-                for part in parts
-            ):
+            if any(Path(part).match(normalized) for part in parts):
                 return True
         return False
+
+
 def is_protected_path(
     scope: WorkspaceScope,
     path: str,
@@ -162,6 +171,8 @@ def is_protected_path(
     """Return whether a workspace path is protected."""
     active_policy = policy or ProtectedPathPolicy()
     return active_policy.classify(scope, path) is not None
+
+
 def evaluate_path_policy(
     scope: WorkspaceScope,
     path: str,

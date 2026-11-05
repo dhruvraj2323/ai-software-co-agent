@@ -1,4 +1,5 @@
-﻿"""Canonical task-authorized workspace scope contract."""
+"""Canonical task-authorized workspace scope contract."""
+
 from __future__ import annotations
 
 from uuid import UUID
@@ -12,6 +13,7 @@ class WorkspaceScope(BaseModel):
     canonicalization and security enforcement are intentionally deferred
     to later security/workspace tasks.
     """
+
     model_config = ConfigDict(extra="forbid")
     task_id: UUID = Field(description="Task authorized to use this workspace scope.")
     workspace_id: UUID = Field(description="Stable identity of the workspace.")

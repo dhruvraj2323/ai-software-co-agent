@@ -1,4 +1,5 @@
 """Unit tests for T026 secret filtering and redaction."""
+
 from __future__ import annotations
 
 import pytest
@@ -18,23 +19,31 @@ def test_api_key_is_redacted() -> None:
     result = redact_secrets(value)
     assert "super-secret-value" not in result
     assert REDACTION_MARKER in result
+
+
 def test_password_is_redacted() -> None:
     key = "pass" + "word"
     value = key + "='my-password'"
     result = redact_secrets(value)
     assert "my-password" not in result
     assert REDACTION_MARKER in result
+
+
 def test_bearer_token_is_redacted() -> None:
     value = "Authorization: Bearer " + "abcdefghijklmnop"
     result = redact_secrets(value)
     assert "abcdefghijklmnop" not in result
     assert "Bearer [REDACTED]" in result
+
+
 def test_generic_token_assignment_is_redacted() -> None:
     key = "tok" + "en"
     value = key + "=" + "secret-value"
     result = redact_secrets(value)
     assert "secret-value" not in result
     assert "token=[REDACTED]" in result
+
+
 def test_github_token_is_redacted() -> None:
     token_prefix = "gh" + "p_"
     token = token_prefix + "123456789012345678901234567890123456"
@@ -42,6 +51,8 @@ def test_github_token_is_redacted() -> None:
     result = redact_secrets(value)
     assert token not in result
     assert REDACTION_MARKER in result
+
+
 def test_aws_access_key_is_redacted() -> None:
     access_key = "AKIA" + "IOSFODNN7EXAMPLE"
     key = "AWS_" + "ACCESS_" + "KEY_" + "ID"
@@ -49,20 +60,18 @@ def test_aws_access_key_is_redacted() -> None:
     result = redact_secrets(value)
     assert access_key not in result
     assert REDACTION_MARKER in result
+
+
 def test_private_key_material_is_redacted() -> None:
     begin = "-----BEGIN " + "RSA " + "PRIVATE KEY-----"
     end = "-----END " + "RSA " + "PRIVATE KEY-----"
-    value = (
-        begin
-        + "\n"
-        + "secret-key-material"
-        + "\n"
-        + end
-    )
+    value = begin + "\n" + "secret-key-material" + "\n" + end
     result = redact_secrets(value)
     assert "secret-key-material" not in result
     assert begin not in result
     assert REDACTION_MARKER in result
+
+
 def test_custom_project_secret_pattern_is_supported() -> None:
     pattern = SecretPattern(
         name="project_secret",
@@ -74,6 +83,8 @@ def test_custom_project_secret_pattern_is_supported() -> None:
     )
     assert "PROJECT_ABC123456789" not in result
     assert REDACTION_MARKER in result
+
+
 def test_contains_secret_detects_nested_secret() -> None:
     key = "api" + "_" + "key"
     value = {
@@ -81,12 +92,16 @@ def test_contains_secret_detects_nested_secret() -> None:
         "details": ["nothing sensitive", key + "=" + "hidden-value"],
     }
     assert contains_secret(value) is True
+
+
 def test_contains_secret_returns_false_for_normal_data() -> None:
     value = {
         "stdout": "build completed successfully",
         "exit_code": 0,
     }
     assert contains_secret(value) is False
+
+
 def test_nested_structures_are_redacted_without_mutating_input() -> None:
     token_key = "tok" + "en"
     password_key = "pass" + "word"
@@ -110,6 +125,8 @@ def test_nested_structures_are_redacted_without_mutating_input() -> None:
     assert "secret-value" not in result["stdout"]
     assert "another-secret" not in result["nested"]["message"]
     assert "third-secret" not in result["items"][0]
+
+
 def test_redactor_preserves_non_string_values() -> None:
     value = {
         "count": 3,
@@ -118,6 +135,8 @@ def test_redactor_preserves_non_string_values() -> None:
     }
     result = SecretRedactor().redact(value)
     assert result == value
+
+
 def test_invalid_custom_pattern_is_rejected() -> None:
     pattern = SecretPattern(
         name="invalid",
