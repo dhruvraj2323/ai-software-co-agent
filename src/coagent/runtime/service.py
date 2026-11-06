@@ -1,4 +1,4 @@
-"""Minimal runtime service for safe session and task commands."""
+"""Runtime service for safe session, task, and client protocol commands (T019, T095)."""
 
 from __future__ import annotations
 
@@ -32,15 +32,16 @@ _CANONICAL_MESSAGES: dict[ProtocolErrorCode, str] = {
 
 
 class RuntimeService:
-    """Minimal in-process runtime command service.
+    """In-process runtime command service dispatching typed protocol messages.
 
-    T019 deliberately exposes only safe session/task operations.
-    It does not execute tools, processes, filesystem operations, or models.
+    T019 and T095: Exposes safe session, task, plan, and diagnostic operations
+    strictly through the versioned client protocol.
     """
 
     def __init__(self) -> None:
         self._sessions: dict[UUID, Session] = {}
         self._tasks: dict[UUID, tuple[UUID, TaskStateMachine]] = {}
+        self._task_data: dict[UUID, dict[str, Any]] = {}
 
     def health(self) -> dict[str, str]:
         """Return deterministic runtime health information."""
@@ -62,6 +63,27 @@ class RuntimeService:
 
         if request.type is RequestType.TASK_STATUS:
             return self._handle_task_status(request)
+
+        if request.type is RequestType.PLAN_REQUEST:
+            return self._handle_plan_request(request)
+
+        if request.type is RequestType.TASK_CANCEL:
+            return self._handle_task_cancel(request)
+
+        if request.type is RequestType.APPROVAL_RESPOND:
+            return self._handle_approval_respond(request)
+
+        if request.type is RequestType.DIFF_OPEN:
+            return self._handle_diff_open(request)
+
+        if request.type is RequestType.COMPLETION_STATUS:
+            return self._handle_completion_status(request)
+
+        if request.type is RequestType.WORKSPACE_REFRESH:
+            return self._handle_workspace_refresh(request)
+
+        if request.type is RequestType.ARTIFACT_OPEN:
+            return self._handle_artifact_open(request)
 
         return self._error(
             request,
@@ -128,6 +150,12 @@ class RuntimeService:
             request.session_id,
             TaskStateMachine(TaskState.CREATED),
         )
+        self._task_data[task_id] = {
+            "goal": request.payload.get("goal", ""),
+            "files": request.payload.get("files", []),
+            "plan": [],
+            "diff": "",
+        }
 
         return self._event(
             request,
@@ -136,6 +164,7 @@ class RuntimeService:
                 "task_id": str(task_id),
                 "session_id": str(request.session_id),
                 "state": TaskState.CREATED.value,
+                "goal": self._task_data[task_id]["goal"],
             },
             task_id=task_id,
         )
@@ -179,6 +208,249 @@ class RuntimeService:
                 "state": state_machine.state.value,
             },
             task_id=request.task_id,
+        )
+
+    def _handle_plan_request(
+        self,
+        request: ClientRequest,
+    ) -> RuntimeEvent | ProtocolErrorEnvelope:
+        """Generate and update plan for an existing task."""
+        if request.task_id is None:
+            return self._error(
+                request,
+                ProtocolErrorCode.MISSING_REQUIRED_FIELD,
+                details={"field": "task_id"},
+            )
+
+        task = self._tasks.get(request.task_id)
+        if task is None:
+            return self._error(
+                request,
+                ProtocolErrorCode.INVALID_CORRELATION_ID,
+                details={"reason": "task does not exist"},
+            )
+
+        task_session_id, state_machine = task
+        if task_session_id != request.session_id:
+            return self._error(
+                request,
+                ProtocolErrorCode.INVALID_CORRELATION_ID,
+                details={"reason": "task does not belong to session"},
+            )
+
+        # Transition task to READY via PLANNING if possible
+        if state_machine.can_transition(TaskState.PLANNING):
+            state_machine.transition(TaskState.PLANNING)
+        if state_machine.can_transition(TaskState.READY):
+            state_machine.transition(TaskState.READY)
+
+        goal = self._task_data.get(request.task_id, {}).get("goal", "Execute engineering task")
+        steps = [
+            {"step": 1, "description": f"Analyze requirement: {goal}"},
+            {"step": 2, "description": "Execute authorized code modification"},
+            {"step": 3, "description": "Run validation gates and verify completion"},
+        ]
+        self._task_data[request.task_id]["plan"] = steps
+
+        return self._event(
+            request,
+            EventType.PLAN_UPDATED,
+            {
+                "task_id": str(request.task_id),
+                "session_id": str(request.session_id),
+                "state": state_machine.state.value,
+                "plan": steps,
+            },
+            task_id=request.task_id,
+        )
+
+    def _handle_task_cancel(
+        self,
+        request: ClientRequest,
+    ) -> RuntimeEvent | ProtocolErrorEnvelope:
+        """Cancel an in-progress or pending task."""
+        if request.task_id is None:
+            return self._error(
+                request,
+                ProtocolErrorCode.MISSING_REQUIRED_FIELD,
+                details={"field": "task_id"},
+            )
+
+        task = self._tasks.get(request.task_id)
+        if task is None:
+            return self._error(
+                request,
+                ProtocolErrorCode.INVALID_CORRELATION_ID,
+                details={"reason": "task does not exist"},
+            )
+
+        task_session_id, state_machine = task
+        if task_session_id != request.session_id:
+            return self._error(
+                request,
+                ProtocolErrorCode.INVALID_CORRELATION_ID,
+                details={"reason": "task does not belong to session"},
+            )
+
+        reason = request.payload.get("reason", "Cancelled by client request")
+        if state_machine.can_transition(TaskState.CANCELLED):
+            state_machine.transition(TaskState.CANCELLED)
+
+        return self._event(
+            request,
+            EventType.TASK_CANCELLED,
+            {
+                "task_id": str(request.task_id),
+                "session_id": str(request.session_id),
+                "state": state_machine.state.value,
+                "reason": reason,
+            },
+            task_id=request.task_id,
+        )
+
+    def _handle_approval_respond(
+        self,
+        request: ClientRequest,
+    ) -> RuntimeEvent | ProtocolErrorEnvelope:
+        """Record an explicit user approval response for an action."""
+        if request.task_id is None:
+            return self._error(
+                request,
+                ProtocolErrorCode.MISSING_REQUIRED_FIELD,
+                details={"field": "task_id"},
+            )
+
+        task = self._tasks.get(request.task_id)
+        if task is None:
+            return self._error(
+                request,
+                ProtocolErrorCode.INVALID_CORRELATION_ID,
+                details={"reason": "task does not exist"},
+            )
+
+        task_session_id, state_machine = task
+        if task_session_id != request.session_id:
+            return self._error(
+                request,
+                ProtocolErrorCode.INVALID_CORRELATION_ID,
+                details={"reason": "task does not belong to session"},
+            )
+
+        approved = bool(request.payload.get("approved", False))
+        approval_id = request.payload.get("approval_id", "")
+        reason = request.payload.get("reason", "")
+
+        # If approved and task was blocked, transition to READY
+        if approved and state_machine.state is TaskState.BLOCKED:
+            if state_machine.can_transition(TaskState.READY):
+                state_machine.transition(TaskState.READY)
+
+        return self._event(
+            request,
+            EventType.TASK_STATE_CHANGED,
+            {
+                "task_id": str(request.task_id),
+                "approval_id": approval_id,
+                "approved": approved,
+                "reason": reason,
+                "state": state_machine.state.value,
+            },
+            task_id=request.task_id,
+        )
+
+    def _handle_diff_open(
+        self,
+        request: ClientRequest,
+    ) -> RuntimeEvent | ProtocolErrorEnvelope:
+        """Return the current task diff/patch summary."""
+        if request.task_id is None:
+            return self._error(
+                request,
+                ProtocolErrorCode.MISSING_REQUIRED_FIELD,
+                details={"field": "task_id"},
+            )
+
+        task = self._tasks.get(request.task_id)
+        if task is None:
+            return self._error(
+                request,
+                ProtocolErrorCode.INVALID_CORRELATION_ID,
+                details={"reason": "task does not exist"},
+            )
+
+        diff_content = self._task_data.get(request.task_id, {}).get("diff", "")
+        return self._event(
+            request,
+            EventType.CONTEXT_UPDATED,
+            {
+                "task_id": str(request.task_id),
+                "diff": diff_content,
+            },
+            task_id=request.task_id,
+        )
+
+    def _handle_completion_status(
+        self,
+        request: ClientRequest,
+    ) -> RuntimeEvent | ProtocolErrorEnvelope:
+        """Return the task completion evaluation."""
+        if request.task_id is None:
+            return self._error(
+                request,
+                ProtocolErrorCode.MISSING_REQUIRED_FIELD,
+                details={"field": "task_id"},
+            )
+
+        task = self._tasks.get(request.task_id)
+        if task is None:
+            return self._error(
+                request,
+                ProtocolErrorCode.INVALID_CORRELATION_ID,
+                details={"reason": "task does not exist"},
+            )
+
+        _, state_machine = task
+        is_complete = state_machine.state is TaskState.COMPLETE
+        event_type = EventType.TASK_COMPLETED if is_complete else EventType.TASK_STATE_CHANGED
+
+        return self._event(
+            request,
+            event_type,
+            {
+                "task_id": str(request.task_id),
+                "state": state_machine.state.value,
+                "is_complete": is_complete,
+            },
+            task_id=request.task_id,
+        )
+
+    def _handle_workspace_refresh(
+        self,
+        request: ClientRequest,
+    ) -> RuntimeEvent:
+        """Handle workspace scope/context refresh."""
+        return self._event(
+            request,
+            EventType.CONTEXT_UPDATED,
+            {
+                "session_id": str(request.session_id),
+                "status": "workspace_refreshed",
+            },
+        )
+
+    def _handle_artifact_open(
+        self,
+        request: ClientRequest,
+    ) -> RuntimeEvent:
+        """Handle opening a safe artifact reference."""
+        artifact_id = request.payload.get("artifact_id", "")
+        return self._event(
+            request,
+            EventType.CONTEXT_UPDATED,
+            {
+                "artifact_id": artifact_id,
+                "status": "ready",
+            },
         )
 
     @staticmethod
