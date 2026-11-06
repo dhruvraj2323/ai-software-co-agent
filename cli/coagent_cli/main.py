@@ -127,5 +127,10 @@ def run_cli(args: list[str] | None = None, client: RuntimeClient | None = None) 
     return 0
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Console script entrypoint."""
     sys.exit(run_cli())
+
+
+if __name__ == "__main__":
+    main()

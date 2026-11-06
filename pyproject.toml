@@ -16,6 +16,9 @@ dependencies = [
     "pydantic>=2,<3",
 ]
 
+[project.scripts]
+coagent = "coagent_cli.main:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0,<9",
@@ -24,10 +27,10 @@ dev = [
 ]
 
 [tool.hatch.build]
-dev-mode-dirs = ["src"]
+dev-mode-dirs = ["src", "cli"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/coagent"]
+packages = ["src/coagent", "cli/coagent_cli"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
