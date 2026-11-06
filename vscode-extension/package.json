@@ -1,0 +1,107 @@
+{
+  "name": "ai-software-co-agent",
+  "displayName": "AI Software Co-Agent",
+  "description": "Deterministic, policy-controlled autonomous software engineering co-agent",
+  "version": "0.1.0",
+  "publisher": "coagent",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Machine Learning",
+    "Testing"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "coagent.createTask",
+        "title": "Co-Agent: Create Task",
+        "category": "Co-Agent"
+      },
+      {
+        "command": "coagent.runTask",
+        "title": "Co-Agent: Run Task Loop",
+        "category": "Co-Agent"
+      },
+      {
+        "command": "coagent.requestPlan",
+        "title": "Co-Agent: Generate Plan",
+        "category": "Co-Agent"
+      },
+      {
+        "command": "coagent.showStatus",
+        "title": "Co-Agent: Show Task Status",
+        "category": "Co-Agent"
+      },
+      {
+        "command": "coagent.showDiff",
+        "title": "Co-Agent: Review Task Changes (Diff)",
+        "category": "Co-Agent"
+      },
+      {
+        "command": "coagent.cancelTask",
+        "title": "Co-Agent: Cancel Task",
+        "category": "Co-Agent"
+      },
+      {
+        "command": "coagent.reconnect",
+        "title": "Co-Agent: Reconnect to Runtime",
+        "category": "Co-Agent"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "coagent-sidebar",
+          "title": "AI Co-Agent",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "coagent-sidebar": [
+        {
+          "id": "coagent.chatView",
+          "type": "webview",
+          "name": "Chat & Task View"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "AI Software Co-Agent",
+      "properties": {
+        "coagent.pythonPath": {
+          "type": "string",
+          "default": "python",
+          "description": "Path to Python executable running the Co-Agent runtime."
+        },
+        "coagent.autonomyMode": {
+          "type": "string",
+          "default": "SUPERVISED_AUTO",
+          "enum": [
+            "PLAN",
+            "ASSISTED_IMPLEMENT",
+            "SUPERVISED_AUTO",
+            "AUTONOMOUS"
+          ],
+          "description": "Configured autonomy mode for tool execution."
+        },
+        "coagent.autoReconnect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically reconnect to local runtime on startup."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  }
+}
