@@ -10,6 +10,12 @@ from .contracts import (
     ToolResultStatus,
 )
 from .gateway import ToolDecisionAuditHook, ToolExecutor, ToolGateway
+from .mcp import (
+    McpAdapter,
+    McpSecurityViolation,
+    McpServerConfig,
+    McpToolDefinition,
+)
 from .registry import (
     ToolCapability,
     ToolDefinition,
@@ -22,6 +28,10 @@ from .registry import (
 
 __all__ = [
     "AutonomyMode",
+    "McpAdapter",
+    "McpSecurityViolation",
+    "McpServerConfig",
+    "McpToolDefinition",
     "Scope",
     "ScopeEffect",
     "ToolCapability",
