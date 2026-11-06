@@ -1,0 +1,178 @@
+================================================================================
+AI SOFTWARE CO-AGENT - STEP-BY-STEP POWERSHELL USAGE GUIDE
+================================================================================
+
+This guide provides copy-paste ready PowerShell commands to set up, run,
+test, and use the AI Software Co-Agent on Windows.
+
+--------------------------------------------------------------------------------
+PREREQUISITES
+--------------------------------------------------------------------------------
+- Windows 10 or 11 (64-bit)
+- PowerShell 5.1 or PowerShell 7+
+- Python 3.14.7 installed (or managed via uv)
+- Git 2.30+ installed
+- uv package manager installed
+
+
+================================================================================
+STEP 1: OPEN POWERSHELL & NAVIGATE TO PROJECT DIRECTORY
+================================================================================
+
+# Change directory into the repository
+cd C:\Projects\ai-software-co-agent
+
+# Verify your current location
+Get-Location
+
+# Verify repository status
+git status
+
+
+================================================================================
+STEP 2: RUN THE CLI CLIENT (QUICK START)
+================================================================================
+
+# 2.1 View all CLI subcommands and options:
+uv run --no-sync python cli/coagent_cli/main.py --help
+
+# 2.2 Check runtime service daemon health and protocol version:
+uv run --no-sync python cli/coagent_cli/main.py health
+
+# 2.3 Inspect client runtime configuration (autonomy mode, timeouts):
+uv run --no-sync python cli/coagent_cli/main.py config
+
+
+================================================================================
+STEP 3: INTERACTIVE TASK WORKFLOWS (STEP-BY-STEP)
+================================================================================
+
+# -----------------------------------------------------------------------------
+# WORKFLOW A: PLAN A TASK (Safe, Read-Only Inspection)
+# -----------------------------------------------------------------------------
+# The agent analyzes the repository, inspects relevant code files, and generates
+# a structured execution plan WITHOUT modifying any files on disk:
+
+uv run --no-sync python cli/coagent_cli/main.py plan "Add password strength validation"
+
+
+# -----------------------------------------------------------------------------
+# WORKFLOW B: EXECUTE A TASK (Controlled Engineering Loop)
+# -----------------------------------------------------------------------------
+# The agent executes the full controlled cycle:
+# (Discovery -> Planning -> Policy Evaluation -> Patch Application -> Gate Validation)
+
+uv run --no-sync python cli/coagent_cli/main.py run "Fix zero division edge case in calculation service"
+
+
+# -----------------------------------------------------------------------------
+# WORKFLOW C: CHECK TASK STATUS & VIEW DIFF
+# -----------------------------------------------------------------------------
+# Use the task UUID output by the plan or run command:
+# Example: 93f4d9bd-843f-4c66-afe8-a48c2b913534
+
+# Check current task stage, status, and event log:
+uv run --no-sync python cli/coagent_cli/main.py status "93f4d9bd-843f-4c66-afe8-a48c2b913534"
+
+# View the unified diff generated for that task:
+uv run --no-sync python cli/coagent_cli/main.py diff "93f4d9bd-843f-4c66-afe8-a48c2b913534"
+
+
+# -----------------------------------------------------------------------------
+# WORKFLOW D: RESPOND TO AN APPROVAL REQUEST (Human-In-The-Loop)
+# -----------------------------------------------------------------------------
+# When a tool requires explicit approval (e.g. bash execution, file deletion):
+
+# Allow the action:
+uv run --no-sync python cli/coagent_cli/main.py approve "<TASK_UUID>" "<APPROVAL_ID>"
+
+# Deny the action with a reason:
+uv run --no-sync python cli/coagent_cli/main.py approve "<TASK_UUID>" "<APPROVAL_ID>" --deny --reason "Disallowed command"
+
+
+# -----------------------------------------------------------------------------
+# WORKFLOW E: CANCEL AN ACTIVE TASK (Safe Emergency Stop)
+# -----------------------------------------------------------------------------
+uv run --no-sync python cli/coagent_cli/main.py cancel "<TASK_UUID>" --reason "User requested halt"
+
+
+================================================================================
+STEP 4: RUN FULL TEST SUITE & STATIC CHECKS
+================================================================================
+
+# 4.1 Run all 980 automated tests:
+uv run --no-sync pytest tests/ -q
+
+# 4.2 Run specific test suites:
+# Release packaging and rollback tests:
+uv run --no-sync pytest tests/release/ -v
+
+# Adversarial security and sandbox escape tests:
+uv run --no-sync pytest tests/security/ -v
+
+# E2E repository workflows:
+uv run --no-sync pytest tests/e2e/ -v
+
+# 4.3 Static type checking (strict mode):
+uv run --no-sync mypy src cli
+
+# 4.4 Linter & style check:
+uv run --no-sync ruff check .
+
+# 4.5 Security scan (secret pattern detection):
+uv run --no-sync python scripts/ci/security_scan.py
+
+# 4.6 Dependency license review:
+uv run --no-sync python scripts/ci/license_and_dependency_check.py
+
+
+================================================================================
+STEP 5: RUN THE CONSOLIDATED CI VERIFICATION PIPELINE
+================================================================================
+
+# Runs the complete release verification pipeline:
+# 1. Ruff lint
+# 2. Mypy type check
+# 3. Security scan
+# 4. License check
+# 5. Packaging (Wheel, Sdist, VS Code)
+# 6. Isolated release verification & smoke test
+
+uv run --no-sync python scripts/ci/verify.py
+
+
+================================================================================
+STEP 6: BUILD & INSTALL STANDALONE RELEASE ARTIFACTS
+================================================================================
+
+# 6.1 Build the deterministic release wheel and source tarball:
+uv run --no-sync python scripts/release/build.py
+
+# 6.2 View built artifacts in dist/:
+Get-ChildItem dist\
+
+# 6.3 Install the pre-built wheel:
+uv pip install dist\ai_software_co_agent-0.1.0-py3-none-any.whl
+
+# 6.4 Now the coagent CLI command works globally:
+coagent --help
+coagent health
+coagent config
+
+
+================================================================================
+STEP 7: EMERGENCY ROLLBACK & CLEANUP
+================================================================================
+
+# Discard all unstaged workspace modifications:
+git restore .
+
+# Clean untracked scratch files:
+git clean -fd
+
+# Verify that the repository is clean:
+git status
+
+================================================================================
+EOF - END OF POWERSHELL GUIDE
+================================================================================

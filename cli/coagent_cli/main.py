@@ -4,13 +4,19 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 from uuid import UUID
 
-from coagent_cli.client import RuntimeClient, RuntimeClientError
-from coagent_cli.commands.config import get_default_config
-from coagent_cli.commands.run import run_task_cmd
-from coagent_cli.commands.task import cancel_task_cmd, create_task_cmd
-from coagent_cli.rendering import render_diff, render_plan, render_task_status
+_ROOT = Path(__file__).resolve().parent.parent.parent
+for _extra in (_ROOT / "cli", _ROOT / "src"):
+    if _extra.exists() and str(_extra) not in sys.path:
+        sys.path.insert(0, str(_extra))
+
+from coagent_cli.client import RuntimeClient, RuntimeClientError  # noqa: E402
+from coagent_cli.commands.config import get_default_config  # noqa: E402
+from coagent_cli.commands.run import run_task_cmd  # noqa: E402
+from coagent_cli.commands.task import cancel_task_cmd, create_task_cmd  # noqa: E402
+from coagent_cli.rendering import render_diff, render_plan, render_task_status  # noqa: E402
 
 
 def build_parser() -> argparse.ArgumentParser:
